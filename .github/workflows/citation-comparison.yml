@@ -1,0 +1,92 @@
+name: Wikiversity-Zotero Citation Comparison
+
+on:
+  # Run on schedule (every 6 hours)
+  schedule:
+    - cron: '0 */6 * * *'  
+  
+  # Allow manual triggering
+  workflow_dispatch:
+  
+  # Run when config files change
+  push:
+    paths:
+      - 'config.yaml'
+      - 'citation_comparator.py'
+      - 'run_comparison.py'
+
+jobs:
+  compare-citations:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run citation comparison
+      env:
+        ZOTERO_USER_ID: ${{ secrets.ZOTERO_USER_ID }}
+        ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY }}
+      run: python run_comparison.py
+    
+    - name: Upload results as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: citation-comparison-results
+        path: |
+          results.json
+          report.md
+          missing_citations.csv
+        retention-days: 30
+    
+    - name: Create Issue if Missing Citations Found
+      if: env.missing_count > 0
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read the markdown report
+          const report = fs.readFileSync('report.md', 'utf8');
+          
+          // Create or update issue
+          const title = `📚 Missing Citations Found (${process.env.missing_count} citations)`;
+          const body = `${report}\n\n---\n*This issue was automatically created by the citation comparison workflow.*`;
+          
+          // Check if issue already exists
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: ['citation-comparison']
+          });
+          
+          if (issues.data.length > 0) {
+            // Update existing issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issues.data[0].number,
+              title: title,
+              body: body
+            });
+          } else {
+            // Create new issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['citation-comparison', 'automated']
+            });
+          }
