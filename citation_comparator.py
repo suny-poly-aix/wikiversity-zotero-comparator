@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+"""
+Wikiversity-Zotero Citation Comparator
+
+This script compares citations from Wikiversity pages with your Zotero library
+and identifies which Wikiversity citations are missing from Zotero.
+
+Requirements:
+- pyzotero: pip install pyzotero
+- requests: pip install requests
+- beautifulsoup4: pip install beautifulsoup4
+- python-dotenv: pip install python-dotenv (optional, for environment variables)
+
+Setup:
+1. Get your Zotero API key from https://www.zotero.org/settings/keys
+2. Find your Zotero User ID from the same page
+3. Set these as environment variables or modify the script directly
 """
 
 import re
