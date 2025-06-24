@@ -1,7 +1,6 @@
 # Wikiversity pages to analyze
 wikiversity_urls:
-  - "https://en.wikiversity.org/wiki/Your_Page_1"
-  - "https://en.wikiversity.org/wiki/Your_Page_2"
+  - "https://en.wikiversity.org/wiki/AIXworkbench/Papers/Building-the-Workbench"
   # Add more URLs as needed
 
 # Comparison settings
