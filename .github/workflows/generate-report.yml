@@ -1,0 +1,59 @@
+name: Generate Citation Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      wikiversity_urls:
+        description: 'Comma-separated list of Wikiversity URLs (optional - uses config if empty)'
+        required: false
+        type: string
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Update config with custom URLs
+      if: ${{ github.event.inputs.wikiversity_urls != '' }}
+      run: |
+        python -c "
+        import yaml
+        urls = '${{ github.event.inputs.wikiversity_urls }}'.split(',')
+        urls = [url.strip() for url in urls if url.strip()]
+        
+        with open('config.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+        
+        config['wikiversity_urls'] = urls
+        
+        with open('config.yaml', 'w') as f:
+            yaml.dump(config, f)
+        "
+    
+    - name: Run citation comparison
+      env:
+        ZOTERO_USER_ID: ${{ secrets.ZOTERO_USER_ID }}
+        ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY }}
+      run: python run_comparison.py
+    
+    - name: Upload results
+      uses: actions/upload-artifact@v3
+      with:
+        name: manual-citation-report-${{ github.run_number }}
+        path: |
+          results.json
+          report.md
+          missing_citations.csv
