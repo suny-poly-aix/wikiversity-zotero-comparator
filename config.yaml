@@ -1,0 +1,19 @@
+# Wikiversity pages to analyze
+wikiversity_urls:
+  - "https://en.wikiversity.org/wiki/Your_Page_1"
+  - "https://en.wikiversity.org/wiki/Your_Page_2"
+  # Add more URLs as needed
+
+# Comparison settings
+similarity_threshold: 0.8  # How similar titles need to be (0.0-1.0)
+
+# Output settings
+output_formats:
+  - json
+  - markdown
+  - csv
+
+# Schedule settings (for GitHub Actions)
+schedule:
+  # Run every Sunday at 9 AM UTC
+  cron: "0 9 * * 0"
